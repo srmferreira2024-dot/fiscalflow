@@ -1,0 +1,24 @@
+{
+  "buildCommand": "cd backend && npm run build && npx prisma migrate deploy",
+  "outputDirectory": "backend/dist",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "functions": {
+    "backend/dist/main.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/backend/dist/main.js"
+    }
+  ]
+}
