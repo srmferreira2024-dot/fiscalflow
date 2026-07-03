@@ -58,11 +58,19 @@ export class InvoiceEmissionProcessor {
           { lastErrorMessage: errorMessage },
         );
         this.logger.error(
-          `Nota ${invoiceId} marcada como ERRO_PERMANENTE após 3 tentativas`,
+          `Nota ${invoiceId} marcada como ERRO_PERMANENTE após 3 tentativas. Erro: ${errorMessage}`,
         );
+        // Alert: enviar notificação (implementar integração com Slack/email)
+        this.alertPermanentError(invoiceId, errorMessage);
       }
 
       throw error;
     }
+  }
+
+  private alertPermanentError(invoiceId: string, reason: string): void {
+    // TODO: Integrar com Slack, email, ou outro serviço de notificação
+    // Por enquanto, apenas log
+    this.logger.warn(`ALERT: Invoice ${invoiceId} falhou permanentemente. Razão: ${reason}`);
   }
 }

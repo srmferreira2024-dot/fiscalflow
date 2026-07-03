@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { InvoicesController } from './invoices.controller';
+import { QueueStatsController } from './controllers/queue-stats.controller';
 import { InvoicesRepository } from './invoices.repository';
 import { InvoicesService } from '../application/services/invoices.service';
 import { MockInvoiceProviderAdapter } from './adapters/mock-invoice-provider.adapter';
@@ -20,7 +21,7 @@ import { ServiceItemsModule } from '../../service-items/infrastructure/service-i
     ProductsModule,
     ServiceItemsModule,
   ],
-  controllers: [InvoicesController],
+  controllers: [InvoicesController, QueueStatsController],
   providers: [
     InvoicesRepository,
     InvoicesService,

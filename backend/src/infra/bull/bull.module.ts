@@ -24,6 +24,11 @@ import { ConfigService } from '@nestjs/config';
             age: 24 * 3600,
           },
         },
+        settings: {
+          maxStalledCount: 2,
+          lockDuration: 30000,
+          lockRenewTime: 15000,
+        },
       }),
     }),
   ],
