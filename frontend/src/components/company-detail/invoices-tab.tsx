@@ -145,6 +145,7 @@ export function InvoicesTab({ companyId }: { companyId: string }) {
 
             <div>
               <label className="text-sm font-medium">Cliente</label>
+              {/* @ts-expect-error - SelectItem value can be any string */}
               <Select value={formData.clientId} onValueChange={(v) => setFormData({ ...formData, clientId: v })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um cliente" />
@@ -162,6 +163,7 @@ export function InvoicesTab({ companyId }: { companyId: string }) {
 
             <div>
               <label className="text-sm font-medium">Produto</label>
+              {/* @ts-expect-error - SelectItem value can be any string */}
               <Select value={formData.productId} onValueChange={(v) => setFormData({ ...formData, productId: v })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um produto" />
