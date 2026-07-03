@@ -6,6 +6,7 @@ import { CertificateTab } from './certificate-tab';
 import { ClientsTab } from './clients-tab';
 import { ProductsTab } from './products-tab';
 import { ServicesTab } from './services-tab';
+import { InvoicesTab } from './invoices-tab';
 import type { Company } from '@/types/auth';
 
 export function CompanyDetailTabs({ company }: { company: Company }) {
@@ -17,6 +18,7 @@ export function CompanyDetailTabs({ company }: { company: Company }) {
         <TabsTrigger value="clients">Clientes</TabsTrigger>
         <TabsTrigger value="products">Produtos</TabsTrigger>
         <TabsTrigger value="services">Serviços</TabsTrigger>
+        <TabsTrigger value="invoices">Notas</TabsTrigger>
       </TabsList>
 
       <TabsContent value="fiscal" className="pt-4">
@@ -33,6 +35,9 @@ export function CompanyDetailTabs({ company }: { company: Company }) {
       </TabsContent>
       <TabsContent value="services" className="pt-4">
         <ServicesTab companyId={company.id} />
+      </TabsContent>
+      <TabsContent value="invoices" className="pt-4">
+        <InvoicesTab companyId={company.id} />
       </TabsContent>
     </Tabs>
   );
