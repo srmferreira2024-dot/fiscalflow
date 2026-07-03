@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  CONTADOR
+  OPERADOR
+  CLIENTE
+}
+
+enum TaxRegime {
+  SIMPLES_NACIONAL
+  LUCRO_PRESUMIDO
+  LUCRO_REAL
+  MEI
+}
+
+enum DocumentType {
+  CPF
+  CNPJ
+}
+
+/// Tenant raiz do SaaS. Cada escritório de contabilidade é isolado dos demais.
+model Office {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  document  String?
+  logoUrl   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users      User[]
+  companies  Company[]
+  auditLogs  AuditLog[]
+
+  @@map("offices")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  officeId          String
+  name              String
+  email             String    @unique
+  passwordHash      String
+  role              UserRole  @default(OPERADOR)
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  isActive          Boolean   @default(true)
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  office        Office         @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@index([officeId])
+  @@map("users")
+}
+
+/// Empresa cadastrada por um escritório.
+model Company {
+  id                 String     @id @default(uuid())
+  officeId           String
+  cnpj               String
+  razaoSocial        String
+  nomeFantasia       String?
+  regimeTributario   TaxRegime?
+  inscricaoEstadual  String?
+  inscricaoMunicipal String?
+  cnae               String?
+  municipio          String?
+  uf                 String?
+  logoUrl            String?
+  /// Configurações fiscais flexíveis (série/numeração de nota, ambiente homologação/produção
+  /// etc.) — schema aberto de propósito, pois só o sprint de Notas define o formato definitivo.
+  fiscalSettings     Json?
+  isActive           Boolean    @default(true)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  office       Office              @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  certificate  CompanyCertificate?
+  clients      Client[]
+  products     Product[]
+  serviceItems ServiceItem[]
+  invoices     Invoice[]
+
+  @@unique([officeId, cnpj])
+  @@index([officeId])
+  @@map("companies")
+}
+
+/// Certificado Digital A1 da empresa, sempre armazenado criptografado (AES-256-GCM).
+/// Nenhum controller expõe encryptedData/encryptedPassword — só metadados.
+model CompanyCertificate {
+  id                  String    @id @default(uuid())
+  companyId           String    @unique
+  encryptedData       Bytes
+  dataIv              Bytes
+  dataAuthTag         Bytes
+  encryptedPassword   Bytes
+  passwordIv          Bytes
+  passwordAuthTag     Bytes
+  uploadedAt          DateTime  @default(now())
+  validoAte           DateTime?
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("company_certificates")
+}
+
+/// Cliente de uma Empresa (destinatário de notas fiscais futuras).
+model Client {
+  id           String       @id @default(uuid())
+  officeId     String
+  companyId    String
+  documentType DocumentType
+  document     String
+  name         String
+  email        String?
+  phone        String?
+  zipCode      String?
+  street       String?
+  number       String?
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
+  notes        String?
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@unique([companyId, document])
+  @@index([officeId])
+  @@index([companyId])
+  @@map("clients")
+}
+
+/// Produto cadastrado por uma Empresa (referenciado por notas fiscais futuras).
+model Product {
+  id        String   @id @default(uuid())
+  officeId  String
+  companyId String
+  code      String
+  name      String
+  ncm       String?
+  cfop      String?
+  cst       String?
+  /// Alíquotas (ICMS/IPI/PIS/COFINS etc.) — schema aberto, igual Company.fiscalSettings:
+  /// o conjunto relevante varia por regime tributário e só o sprint de Notas fixa o formato.
+  aliquotas Json?
+  price     Decimal  @db.Decimal(12, 2)
+  category  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company      Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoiceItems InvoiceItem[]
+
+  @@unique([companyId, code])
+  @@index([officeId])
+  @@index([companyId])
+  @@map("products")
+}
+
+/// Serviço cadastrado por uma Empresa. Nome do model diferente de "Service" de propósito,
+/// para não colidir com a pasta application/services/ de cada módulo — na API/Swagger
+/// continua aparecendo como "serviço" (/companies/:companyId/services).
+model ServiceItem {
+  id           String   @id @default(uuid())
+  officeId     String
+  companyId    String
+  code         String
+  description  String
+  issAliquota  Decimal? @db.Decimal(5, 2)
+  municipio    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoiceItems InvoiceItem[]
+
+  @@unique([companyId, code])
+  @@index([officeId])
+  @@index([companyId])
+  @@map("service_items")
+}
+
+enum InvoiceStatus {
+  RASCUNHO
+  PENDENTE_FILA
+  PROCESSANDO
+  AUTORIZADA
+  REJEITADA
+  ERRO_PERMANENTE
+  CANCELADA
+}
+
+/// Nota fiscal emitida por uma Empresa para um Cliente, através de um InvoiceProvider
+/// (Adapter) resolvido via DI — ver modules/invoices/domain/ports/invoice-provider.port.ts.
+model Invoice {
+  id               String        @id @default(uuid())
+  officeId         String
+  companyId        String
+  clientId         String
+  status           InvoiceStatus @default(RASCUNHO)
+  numero           String?
+  protocolo        String?
+  valorTotal       Decimal       @db.Decimal(12, 2)
+  dataEmissao      DateTime?
+  /// Motivo de rejeição/cancelamento, conforme o status.
+  motivo           String?
+  /// Log do último erro de emissão (quando status = ERRO_PERMANENTE ou retentativas esgotadas).
+  lastErrorMessage String?
+  /// Nome do Adapter que emitiu (ex.: "mock") — hoje só existe um, mas já registra a
+  /// escolha para quando houver mais de um InvoiceProvider disponível.
+  providerName     String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  company Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  client  Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  items   InvoiceItem[]
+
+  @@index([officeId])
+  @@index([companyId])
+  @@index([clientId])
+  @@index([status])
+  @@map("invoices")
+}
+
+/// Item de uma Invoice — referencia exatamente um de productId/serviceItemId (validado na
+/// camada de aplicação). description/valores são um snapshot no momento da emissão, não
+/// acompanham alterações futuras do cadastro de Produto/Serviço.
+model InvoiceItem {
+  id            String  @id @default(uuid())
+  invoiceId     String
+  description   String
+  quantidade    Decimal @db.Decimal(12, 3)
+  valorUnitario Decimal @db.Decimal(12, 2)
+  valorTotal    Decimal @db.Decimal(12, 2)
+  productId     String?
+  serviceItemId String?
+
+  invoice     Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product     Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  serviceItem ServiceItem? @relation(fields: [serviceItemId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+/// Registro mínimo de auditoria (eventos de auth nesta sprint). O módulo completo de
+/// Auditoria — cobrindo todas as ações do sistema — é escopo de uma sprint futura.
+model AuditLog {
+  id        String   @id @default(uuid())
+  officeId  String
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  ipAddress String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  office Office @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([officeId])
+  @@index([userId])
+  @@map("audit_logs")
+}

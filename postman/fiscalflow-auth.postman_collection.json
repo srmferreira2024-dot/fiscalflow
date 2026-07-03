@@ -1,0 +1,421 @@
+{
+  "info": {
+    "name": "FiscalFlow - Auth, Companies, Clients, Products, Services & Invoices (Sprint 1-5)",
+    "description": "Fluxo de autenticação, cadastro fiscal completo de Empresas (com Certificado A1), Clientes, Produtos, Serviços e emissão de Notas Fiscais do FiscalFlow.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "companyId", "value": "" },
+    { "key": "clientId", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "serviceId", "value": "" },
+    { "key": "invoiceId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Registrar escritório",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('accessToken', body.accessToken);",
+              "pm.collectionVariables.set('refreshToken', body.refreshToken);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"officeName\": \"Escritório Exemplo\",\n  \"userName\": \"Admin Exemplo\",\n  \"email\": \"admin@escritorio-exemplo.com.br\",\n  \"password\": \"SenhaForte@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('accessToken', body.accessToken);",
+              "pm.collectionVariables.set('refreshToken', body.refreshToken);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@escritorio-exemplo.com.br\",\n  \"password\": \"SenhaForte@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Renovar token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('accessToken', body.accessToken);",
+              "pm.collectionVariables.set('refreshToken', body.refreshToken);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/refresh",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Meu perfil",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/users/me"
+      }
+    },
+    {
+      "name": "Meu escritório",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/offices/me"
+      }
+    },
+    {
+      "name": "Criar empresa",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('companyId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/companies",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cnpj\": \"11222333000181\",\n  \"razaoSocial\": \"Empresa Exemplo LTDA\",\n  \"nomeFantasia\": \"Empresa Exemplo\",\n  \"regimeTributario\": \"SIMPLES_NACIONAL\",\n  \"inscricaoEstadual\": \"123456789\",\n  \"cnae\": \"6201-5/01\",\n  \"municipio\": \"São Paulo\",\n  \"uf\": \"SP\",\n  \"fiscalSettings\": { \"serieNota\": 1, \"ambiente\": \"homologacao\" }\n}"
+        }
+      }
+    },
+    {
+      "name": "Upload de Certificado A1 (base64)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/companies/{{companyId}}/certificate",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fileBase64\": \"BASE64_DO_ARQUIVO_PFX_AQUI\",\n  \"password\": \"SenhaDoCertificado@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Remover Certificado A1",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/certificate"
+      }
+    },
+    {
+      "name": "Listar empresas",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies"
+      }
+    },
+    {
+      "name": "Atualizar empresa",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/companies/{{companyId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nomeFantasia\": \"Empresa Exemplo Atualizada\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Remover empresa",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}"
+      }
+    },
+    {
+      "name": "Criar cliente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('clientId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/companies/{{companyId}}/clients",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"documentType\": \"CPF\",\n  \"document\": \"11144477735\",\n  \"name\": \"Cliente Exemplo\",\n  \"email\": \"cliente@exemplo.com.br\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Listar clientes da empresa",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/clients"
+      }
+    },
+    {
+      "name": "Atualizar cliente",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/companies/{{companyId}}/clients/{{clientId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"11999998888\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Remover cliente",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/clients/{{clientId}}"
+      }
+    },
+    {
+      "name": "Criar produto",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('productId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/companies/{{companyId}}/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"PROD-001\",\n  \"name\": \"Produto Exemplo\",\n  \"ncm\": \"61091000\",\n  \"cfop\": \"5102\",\n  \"price\": 49.90,\n  \"aliquotas\": { \"icms\": 18 }\n}"
+        }
+      }
+    },
+    {
+      "name": "Listar produtos da empresa",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/products"
+      }
+    },
+    {
+      "name": "Remover produto",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/products/{{productId}}"
+      }
+    },
+    {
+      "name": "Criar serviço",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('serviceId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/companies/{{companyId}}/services",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"1.04\",\n  \"description\": \"Elaboração de programas de computador\",\n  \"issAliquota\": 5,\n  \"municipio\": \"São Paulo\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Listar serviços da empresa",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/services"
+      }
+    },
+    {
+      "name": "Remover serviço",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/services/{{serviceId}}"
+      }
+    },
+    {
+      "name": "Emitir nota",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('invoiceId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/companies/{{companyId}}/invoices",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"items\": [\n    { \"productId\": \"{{productId}}\", \"quantidade\": 1, \"valorUnitario\": 49.90 }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "Listar notas da empresa",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/invoices"
+      }
+    },
+    {
+      "name": "Consultar nota",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/invoices/{{invoiceId}}"
+      }
+    },
+    {
+      "name": "Baixar XML da nota",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/invoices/{{invoiceId}}/xml"
+      }
+    },
+    {
+      "name": "Baixar PDF da nota",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/invoices/{{invoiceId}}/pdf"
+      }
+    },
+    {
+      "name": "Reemitir nota",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/companies/{{companyId}}/invoices/{{invoiceId}}/reemitir"
+      }
+    },
+    {
+      "name": "Cancelar nota",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/companies/{{companyId}}/invoices/{{invoiceId}}/cancelar",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"motivo\": \"Erro de digitação\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/logout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+        }
+      }
+    }
+  ]
+}
