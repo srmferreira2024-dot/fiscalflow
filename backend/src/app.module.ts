@@ -11,6 +11,7 @@ import { RedisService } from './infra/redis/redis.service';
 import { BullConfigModule } from './infra/bull/bull.module';
 import { AuthModule } from './modules/auth/infrastructure/auth.module';
 import { UsersModule } from './modules/users/infrastructure/users.module';
+import { AuditModule } from './modules/audit/infrastructure/audit.module';
 import { OfficesModule } from './modules/offices/infrastructure/offices.module';
 import { CompaniesModule } from './modules/companies/infrastructure/companies.module';
 import { ClientsModule } from './modules/clients/infrastructure/clients.module';
@@ -41,6 +42,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     PrismaModule,
     AuthModule,
     UsersModule,
+    AuditModule,
     OfficesModule,
     CompaniesModule,
     ClientsModule,
