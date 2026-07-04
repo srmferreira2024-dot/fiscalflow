@@ -25,11 +25,17 @@ export class UsersRepository {
     });
   }
 
-  async create(officeId: string, input: Prisma.UserCreateInput): Promise<User> {
+  async create(
+    officeId: string,
+    input: Omit<Prisma.UserCreateInput, 'office'> & { office?: never },
+  ): Promise<User> {
     return this.prisma.user.create({
       data: {
         officeId,
-        ...input,
+        name: input.name,
+        email: input.email,
+        role: input.role,
+        passwordHash: input.passwordHash,
       },
     });
   }

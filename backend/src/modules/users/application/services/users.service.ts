@@ -2,24 +2,22 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { hash } from 'argon2';
 import { User } from '@prisma/client';
 import { UsersRepository } from '../../infrastructure/users.repository';
-import { OfficesService } from '../../../offices/application/services/offices.service';
 import { InviteUserDto } from '../dto/invite-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { PrismaService } from '../../../../infra/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly officesService: OfficesService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async listForOffice(officeId: string): Promise<User[]> {
-    await this.officesService.getById(officeId);
     return this.usersRepository.findAllByOffice(officeId);
   }
 
   async getForOffice(id: string, officeId: string): Promise<User> {
-    await this.officesService.getById(officeId);
     const user = await this.usersRepository.findByIdAndOffice(id, officeId);
     if (!user) {
       throw new NotFoundException('Usuário não encontrado');
@@ -28,7 +26,6 @@ export class UsersService {
   }
 
   async inviteUser(officeId: string, dto: InviteUserDto): Promise<User> {
-    await this.officesService.getById(officeId);
 
     const existing = await this.usersRepository.findByEmailAndOffice(dto.email, officeId);
     if (existing) {
