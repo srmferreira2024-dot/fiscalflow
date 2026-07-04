@@ -31,7 +31,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
       validationSchema: envValidationSchema,
     }),
     RedisModule,
-    BullConfigModule,
+    // BullConfigModule, // TODO: Re-enable after fixing Vercel serverless Redis connections
     ThrottlerModule.forRootAsync({
       inject: [RedisService],
       useFactory: (redisService: RedisService) => ({
