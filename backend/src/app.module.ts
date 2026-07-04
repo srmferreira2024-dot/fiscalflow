@@ -30,10 +30,14 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
       load: [configuration],
       validationSchema: envValidationSchema,
     }),
-    // RedisModule, // TODO: Fix Vercel serverless Redis connections
-    // BullConfigModule, // TODO: Re-enable after fixing Vercel serverless Redis connections
-    ThrottlerModule.forRoot({
-      throttlers: [{ ttl: 60_000, limit: 60 }],
+    RedisModule,
+    BullConfigModule,
+    ThrottlerModule.forRootAsync({
+      inject: [RedisService],
+      useFactory: (redisService: RedisService) => ({
+        throttlers: [{ ttl: 60_000, limit: 60 }],
+        storage: new ThrottlerStorageRedisService(redisService.client),
+      }),
     }),
     PrismaModule,
     AuthModule,
