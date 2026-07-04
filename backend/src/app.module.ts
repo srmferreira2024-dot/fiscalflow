@@ -30,14 +30,10 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
       load: [configuration],
       validationSchema: envValidationSchema,
     }),
-    RedisModule,
-    // BullConfigModule, // Desabilitado temporariamente - causa delay no startup
-    ThrottlerModule.forRootAsync({
-      inject: [RedisService],
-      useFactory: (redisService: RedisService) => ({
-        throttlers: [{ ttl: 60_000, limit: 60 }],
-        storage: new ThrottlerStorageRedisService(redisService.client),
-      }),
+    // RedisModule, // Desabilitado - Render free tier tem timeout com conexões persistentes
+    // BullConfigModule, // Desabilitado - depende de Redis
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60_000, limit: 60 }],
     }),
     PrismaModule,
     AuthModule,
