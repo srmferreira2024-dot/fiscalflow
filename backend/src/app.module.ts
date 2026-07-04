@@ -31,7 +31,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
       validationSchema: envValidationSchema,
     }),
     RedisModule,
-    BullConfigModule,
+    // BullConfigModule, // Desabilitado temporariamente - causa delay no startup
     ThrottlerModule.forRootAsync({
       inject: [RedisService],
       useFactory: (redisService: RedisService) => ({
