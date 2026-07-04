@@ -1,4 +1,5 @@
 {
+  "root": "backend",
   "buildCommand": "npm run build && npx prisma migrate deploy",
   "outputDirectory": "dist",
   "env": {
