@@ -19,5 +19,9 @@ export {
   type CardProps,
 } from './Card';
 
+// Layouts
+export { AuthLayout, type AuthLayoutProps } from './AuthLayout';
+export { StepIndicator, type StepIndicatorProps, type Step } from './StepIndicator';
+
 // Tema
 export { ThemeProvider, useTheme, useThemeToggle, type Theme } from '@/design-system/theme/ThemeProvider';
